@@ -20,10 +20,7 @@ const getAllTours =  (req, res) => {
 };
 
 
-
-app.get('/api/v1/tours', getAllTours);
-
-app.get('/api/v1/tours/:id', (req, res) => {
+const getTour = (req, res) => {
     console.log(req.params);
 
     const id = req.params.id *1 ;
@@ -42,31 +39,31 @@ app.get('/api/v1/tours/:id', (req, res) => {
         tour,
       },
     });
-});
-
-app.post('/api/v1/tours', (req, res) => {
-  //console.log(req.body);
-
-  const newID = tours[tours.length - 1].id + 1;
-  const newTour = { id: newID, ...req.body };
-
-  tours.push(newTour);
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          tour: newTour,
-        },
-      });
-    },
-  );
-});
+}
 
 
-app.patch('/api/v1/tours/:id', (req,res) => {
+const createTour = (req, res) => {
+    //console.log(req.body);
+  
+    const newID = tours[tours.length - 1].id + 1;
+    const newTour = { id: newID, ...req.body };
+  
+    tours.push(newTour);
+    fs.writeFile(
+      `${__dirname}/dev-data/data/tours-simple.json`,
+      JSON.stringify(tours),
+      (err) => {
+        res.status(201).json({
+          status: 'success',
+          data: {
+            tour: newTour,
+          },
+        });
+      },
+    );
+  };
+
+const updateTour = (req,res) => {
     
     if (req.params.id * 1> tours.length) {
         return res.status(404).json({
@@ -81,10 +78,9 @@ app.patch('/api/v1/tours/:id', (req,res) => {
             tour: "<Updated Tour Here>"
         }
     })
-})
+};
 
-
-app.delete('/api/v1/tours/:id', (req,res) => {
+const deleteTour = (req,res) => {
     
     if (req.params.id * 1> tours.length) {
         return res.status(404).json({
@@ -97,7 +93,15 @@ app.delete('/api/v1/tours/:id', (req,res) => {
         status: 'Success',
         data: null
     })
-})
+};
+
+
+
+app.get('/api/v1/tours', getAllTours);
+app.get('/api/v1/tours/:id', getTour);
+app.post('/api/v1/tours', createTour);
+app.patch('/api/v1/tours/:id', updateTour);
+app.delete('/api/v1/tours/:id', deleteTour);
 
 
 
