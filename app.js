@@ -1,7 +1,13 @@
 const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
 
 const app = express();
+
+
+// 1) Middlewares
+app.use(morgan('dev'));
+
 app.use(express.json());
 
 
@@ -21,6 +27,8 @@ const tours = JSON.parse(
 );
 
 
+
+// 2) ROUTE HANDLERS 
 const getAllTours =  (req, res) => {
   console.log(req.requestTime);
     res.status(200).json({
@@ -109,7 +117,7 @@ const deleteTour = (req,res) => {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//routes
+// 3) routes
 // app.get('/api/v1/tours', getAllTours);
 // app.get('/api/v1/tours/:id', getTour);
 // app.post('/api/v1/tours', createTour);
@@ -129,7 +137,7 @@ app
     .delete(deleteTour);
 
 
-//server
+// 4) server
 const port = 3000;
 app.listen(port, () => {
   console.log(`running on ${port} ......`);
