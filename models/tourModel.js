@@ -1,7 +1,7 @@
-/* eslint-disable prefer-arrow-callback */
+/* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -12,6 +12,7 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxlength: [40, 'A tour name must have less or equal to 40 chracters'],
       minlength: [10, 'A tour name must have less or equal to 10 chracters'],
+      validate: [validator.isAlpha, 'The name must only contain characters'],
     },
     slug: String,
     duration: {
