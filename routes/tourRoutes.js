@@ -1,26 +1,26 @@
 const express = require('express');
+const tourController = require('./../controllers/tourController');
 
-const tourController = require('../controllers/tourController');
+const router = express.Router();
 
-const tourRouter = express.Router();
+// router.param('id', tourController.checkID);
 
-// tourRouter.param('id', tourController.checkID);
-tourRouter
+router
   .route('/top-5-cheap')
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
-tourRouter.route('/tour-stats').get(tourController.getTourStats);
-tourRouter.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+router.route('/tour-stats').get(tourController.getTourStats);
+router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
 
-tourRouter
+router
   .route('/')
   .get(tourController.getAllTours)
   .post(tourController.createTour);
 
-tourRouter
+router
   .route('/:id')
   .get(tourController.getTour)
   .patch(tourController.updateTour)
   .delete(tourController.deleteTour);
 
-module.exports = tourRouter;
+module.exports = router;
