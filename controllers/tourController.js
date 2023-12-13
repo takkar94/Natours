@@ -10,7 +10,7 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-exports.getAllTours = catchAsync(async (req, res) => {
+exports.getAllTours = catchAsync(async (req, res, next) => {
   
   const features = new APIFeatures(Tour.find(), req.query)
   .filter()
@@ -30,7 +30,7 @@ res.status(200).json({
   
 });
 
-exports.getTour = catchAsync(async (req, res) => {
+exports.getTour = catchAsync(async (req, res, next) => {
  
     const tour = await Tour.findById(req.params.id);
     // Tour.findOne({ _id: req.params.id })
@@ -43,7 +43,7 @@ exports.getTour = catchAsync(async (req, res) => {
     });
 });
 
-exports.createTour =catchAsync(async (req, res) => {
+exports.createTour =catchAsync(async (req, res, next) => {
  
     // const newTour = new Tour({})
     // newTour.save()
@@ -58,7 +58,7 @@ exports.createTour =catchAsync(async (req, res) => {
     });
 });
 
-exports.updateTour = catchAsync(async (req, res) => {
+exports.updateTour = catchAsync(async (req, res, next) => {
 
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -73,7 +73,7 @@ exports.updateTour = catchAsync(async (req, res) => {
     });
 });
 
-exports.deleteTour = catchAsync(async (req, res) => {
+exports.deleteTour = catchAsync(async (req, res, next) => {
 
     await Tour.findByIdAndDelete(req.params.id);
 
@@ -116,7 +116,7 @@ exports.getTourStats = catchAsync(async (req, res) => {
  
 });
 
-exports.getMonthlyPlan = catchAsync(async (req, res) => {
+exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     const year = req.params.year * 1; // 2021
 
     const plan = await Tour.aggregate([
