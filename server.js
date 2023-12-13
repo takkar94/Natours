@@ -30,3 +30,11 @@ process.on('unhandledRejection', err => {
     process.exit(1);
   })
 });
+
+process.on('uncaughtException', err=> {
+  console.log(err.name, err.message);
+  console.log('Uncaught Exception, shutting down');
+  server.close(()=> {
+    process.exit(1);
+  })
+})
