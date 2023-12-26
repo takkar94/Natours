@@ -1,14 +1,15 @@
 /* eslint-disable prettier/prettier */
+const {promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 const signToken = id => {
-    return jwt.sign({ id: id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN
-      });
-}
+  return jwt.sign({ id: id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN
+  });
+};
 
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
@@ -18,7 +19,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm
   });
 
-  const token = signToken(newUser._id)
+  const token = signToken(newUser._id);
 
   res.status(201).json({
     status: 'Success',
@@ -38,7 +39,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select('+password');
   //const correct = user.correctPassword(password, user.password);
-  if(!user || !(await user.correctPassword(password, user.password))){
+  if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -47,4 +48,34 @@ exports.login = catchAsync(async (req, res, next) => {
     status: 'success',
     token
   });
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  //getting token
+
+  let token;
+  // const {
+  //   headers: { authorization }
+  // } = req;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if(!token) {
+    return next(new AppError('You are not logged in! Please log in to get access', 401));
+  }
+  next();
+
+  //verification 
+  // eslint-disable-next-line no-unused-vars
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  //check if user exists 
+  const freshUser = await User.findById(decoded.id);
+  if(!freshUser) {
+    return next (new AppError('The user belonging to this token no longer exists'));
+  }
 });
