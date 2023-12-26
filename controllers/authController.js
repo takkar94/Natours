@@ -67,7 +67,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   if(!token) {
     return next(new AppError('You are not logged in! Please log in to get access', 401));
   }
-  next();
+
 
   //verification 
   // eslint-disable-next-line no-unused-vars
@@ -78,4 +78,13 @@ exports.protect = catchAsync(async (req, res, next) => {
   if(!freshUser) {
     return next (new AppError('The user belonging to this token no longer exists'));
   }
+
+  //checking for pass change 
+  if(freshUser.changedPasswordAfter(decoded.iat)) {
+    return next(new AppError('Password changed recently. Please login again !!!!', 401));
+  };
+
+
+  req.user = freshUser;
+  next();
 });
