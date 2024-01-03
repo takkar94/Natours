@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-const {promisify } = require('util');
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -15,6 +15,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
+    role: req.body.role,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm
   });
@@ -64,27 +65,62 @@ exports.protect = catchAsync(async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  if(!token) {
-    return next(new AppError('You are not logged in! Please log in to get access', 401));
+  if (!token) {
+    return next(
+      new AppError('You are not logged in! Please log in to get access', 401)
+    );
   }
 
-
-  //verification 
+  //verification
   // eslint-disable-next-line no-unused-vars
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  //check if user exists 
-  const freshUser = await User.findById(decoded.id);
-  if(!freshUser) {
-    return next (new AppError('The user belonging to this token no longer exists'));
+  //check if user exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError('The user belonging to this token no longer exists')
+    );
   }
 
-  //checking for pass change 
-  if(freshUser.changedPasswordAfter(decoded.iat)) {
-    return next(new AppError('Password changed recently. Please login again !!!!', 401));
-  };
+  //checking for pass change
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('Password changed recently. Please login again !!!!', 401)
+    );
+  }
 
-
-  req.user = freshUser;
+  req.user = currentUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // roles ['admin', 'lead-guide']. role='user'
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+
+    next();
+  };
+};
+
+
+exports.forgotPassword = catchAsync(async (req, res ,next) => {
+  //get user based on posted email 
+  const user = await User.findOne({ email: req.body.email});
+  if(!user){
+    return next(new AppError('There is no user with the email address'), 404);
+  }
+
+  //generate reset token 
+  const resetToken = user.createPasswordResetToken();
+  await user.save({validateBeforeSave: false});
+
+
+  //generate the random token
+})
+
+exports.resetPassword=(req,res,next)=> {}
