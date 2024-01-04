@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 const { promisify } = require('util');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -126,7 +127,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   const message = `Forgot your password? Submit aPATCH request with your new password and passwordConfirm to: ${resetURL}.\n If you didn't forgot your password please ignore this `;
 
-  try{
+  try {
     await sendEmail({
       email: user.email,
       subject: 'Your Password Rest Token(Valid for 10 mins)',
@@ -136,23 +137,47 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     res.status(200).json({
       status: 'Success',
       message: 'Token sent to email'
-    })
-
-  }catch(err){
+    });
+  } catch (err) {
     console.log(err);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    await user.save({validateBeforeSave: false });
+    await user.save({ validateBeforeSave: false });
 
-    return next(
-      new AppError('there was an error sending email', 500)
-    )
+    return next(new AppError('there was an error sending email', 500));
   }
- 
+});
 
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  //get the user
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
 
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }
+  });
+
+  //if token not expired and presence of user set new pass
+  if (!user) {
+    return next(new AppError('Token is invalid or expired lol ', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    status: 'Success',
+    token
+  });
 
 
 });
-
-exports.resetPassword = (req, res, next) => {};
