@@ -16,7 +16,7 @@ const app = express();
 
 // 1)Global  MIDDLEWARES
 
-app.use(helmet());//securing http headers
+app.use(helmet()); //securing http headers
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -24,14 +24,12 @@ if (process.env.NODE_ENV === 'development') {
 
 const limiter = rateLimit({
   max: 100,
-  windowM: 60 * 60 * 1000, //will need to modify the time later 
-  message: 'Too many requests from this IP, please try again in an hour' 
+  windowM: 60 * 60 * 1000, //will need to modify the time later
+  message: 'Too many requests from this IP, please try again in an hour'
 });
 app.use('/api', limiter);
 
-
-
-app.use(express.json({limit: '10kb'}));
+app.use(express.json({ limit: '10kb' }));
 
 // Data Sanitization for nosql query injection attacks
 app.use(mongoSanitize());
@@ -40,9 +38,17 @@ app.use(mongoSanitize());
 app.use(xss());
 
 //preventing parameter pollution
-app.use(hpp({
-  whitelist: ['duration']
-}));
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'difficulty',
+      'price',
+      'maxGroupSize'
+    ]
+  })
+);
 
 app.use(express.static(`${__dirname}/public`));
 
@@ -57,9 +63,7 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
 app.all('*', (req, res, next) => {
-
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));
-
 });
 
 app.use(globalErrorHandler);
