@@ -43,6 +43,7 @@ reviewSchema.pre(/^find/, function(next) {
     path: 'user',
     select: 'photo'
   });
+  next();
 });
 
 const Review = mongoose.model('Review', reviewSchema);
