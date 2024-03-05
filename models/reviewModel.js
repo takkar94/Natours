@@ -52,6 +52,8 @@ reviewSchema.pre(/^find/, function(next) {
   next();
 });
 
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 reviewSchema.statics.calcAverageRating = async function(tourId) {
   const stats = await this.aggregate([
     {
@@ -72,8 +74,18 @@ reviewSchema.statics.calcAverageRating = async function(tourId) {
   });
 };
 
-reviewSchema.post('save', function(next) {
+reviewSchema.post('save', function() {
   this.constructor.calcAverageRating(this.tour);
+});
+
+reviewSchema.pre(/^findOneAnd/, async function(next) {
+  this.r = await this.findOne();
+  console.log(this.r);
+  next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function() {
+  await this.r.constructor.calcAverageRating(this.r.tour);
 });
 
 const Review = mongoose.model('Review', reviewSchema);
